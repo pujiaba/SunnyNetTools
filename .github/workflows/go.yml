@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14   # 明确指定 macOS 版本，避免 macos-latest 迁移带来的不确定性
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
 
@@ -29,10 +29,17 @@ jobs:
       - name: Install Wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+          cd ..
+
       - name: Build with Wails
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
-          wails build -platform darwin/universal
+          wails build -platform darwin/universal -ldflags="-s -w"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
