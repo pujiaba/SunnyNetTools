@@ -1,13 +1,13 @@
 name: Build SunnyNetTools for macOS
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-14  # 明确指定 macOS 版本，避免未来兼容性问题
+    runs-on: macos-14   # 明确指定 macOS 版本，避免 macos-latest 迁移带来的不确定性
     steps:
       - uses: actions/checkout@v4
 
@@ -16,12 +16,26 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Build
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Fix go.mod dependency
         run: |
-          go build -o SunnyNet
+          go mod edit -replace=github.com/qtgolang/SunnyNet=github.com/qtgolang/SunnyNet@main
+          go mod tidy
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Build with Wails
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          wails build -platform darwin/universal
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: SunnyNet-macos
-          path: SunnyNet
+          path: build/bin/*
