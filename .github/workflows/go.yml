@@ -1,0 +1,24 @@
+name: Build SunnyNetTools for macOS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      - name: Build
+        run: |
+          go build -o SunnyNet
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: SunnyNet-macos
+          path: SunnyNet
